@@ -1,0 +1,136 @@
+-- Cleaning Data With SQL to make it more useable
+
+select * 
+	from P_Project1.dbo.Ndata;
+
+-- Change the Date Format so there is no unecessary time attached
+
+select SaleDate, CONVERT(Date,SaleDate) 
+	from P_Project1.dbo.Ndata;
+
+
+ALTER TABLE Ndata
+ADD SaleDateUpdated Date;
+
+UPDATE Ndata 
+SET SaleDateUpdated = CONVERT(Date,SaleDate)
+
+ALTER TABLE Ndata 
+DROP COLUMN SaleDate
+
+--Populate Property Address data
+
+
+
+-- Using Self Join to Find where the ParcelID's Match, 
+--In order to Populate the corresponding PropertyAdress in the Null Values
+-- Update Table 
+
+Select N1.ParcelID, N1.PropertyAddress, N2.ParcelID, N2.PropertyAddress,
+	ISNULL(N1.PropertyAddress,N2.PropertyAddress)
+from P_Project1.dbo.Ndata N1
+JOIN P_Project1.dbo.Ndata N2 
+	on N1.ParcelID = N2.ParcelID
+	and N1.[UniqueID ] != N2.[UniqueID ]
+Where N1.PropertyAddress is Null 
+
+
+UPDATE N1
+SET PropertyAddress = ISNULL(N1.PropertyAddress,N2.PropertyAddress) 
+From P_Project1.dbo.Ndata N1
+JOIN P_Project1.dbo.Ndata N2 
+	on N1.ParcelID = N2.ParcelID
+	and N1.[UniqueID ] != N2.[UniqueID ]
+Where N1.PropertyAddress is Null 
+
+select PropertyAddress,ParcelID
+from P_Project1.dbo.Ndata
+order by ParcelID;
+
+
+--Seperating the PropertyAddress Column into individual columns
+
+Select 
+	SUBSTRING(PropertyAddress, 1, CHARINDEX(',',PropertyAddress) -1) as Address,
+	SUBSTRING(PropertyAddress, CHARINDEX(',',PropertyAddress) + 1, LEN(PropertyAddress)) as City
+from P_Project1.dbo.Ndata
+
+
+ALTER TABLE P_Project1.dbo.Ndata
+ADD PropertySplitAddress Nvarchar(255);
+
+ALTER TABLE P_Project1.dbo.Ndata
+ADD PropertySplitCity Nvarchar(255);
+
+
+UPDATE P_Project1.dbo.Ndata 
+SET PropertySplitAddress = SUBSTRING(PropertyAddress, 1, CHARINDEX(',',PropertyAddress) -1)
+
+
+UPDATE P_Project1.dbo.Ndata 
+SET PropertySplitCity = SUBSTRING(PropertyAddress, CHARINDEX(',',PropertyAddress) + 1, LEN(PropertyAddress))
+
+
+
+
+
+-- Now Seperate the OwnerAddress Column Using PARSENAME Function
+
+
+Select OwnerAddress
+from P_Project1.dbo.Ndata
+
+select 
+PARSENAME(REPLACE(OwnerAddress, ',', '.'), 3),
+PARSENAME(REPLACE(OwnerAddress, ',', '.'), 2),
+PARSENAME(REPLACE(OwnerAddress, ',', '.'), 1)
+from P_Project1.dbo.Ndata
+
+
+ALTER TABLE P_Project1.dbo.Ndata
+ADD OwnerAddressSplit Nvarchar(255)
+
+ALTER TABLE P_Project1.dbo.Ndata
+ADD OwnerCitySplit Nvarchar(255)
+
+ALTER TABLE P_Project1.dbo.Ndata
+ADD OwnerStateSplit Nvarchar(255)
+
+
+UPDATE P_Project1.dbo.Ndata
+SET OwnerAddressSplit = PARSENAME(REPLACE(OwnerAddress, ',', '.'), 3)
+
+UPDATE P_Project1.dbo.Ndata
+SET OwnerCitySplit = PARSENAME(REPLACE(OwnerAddress, ',', '.'), 2)
+
+UPDATE P_Project1.dbo.Ndata
+SET OwnerStateSplit = PARSENAME(REPLACE(OwnerAddress, ',', '.'), 1)
+
+
+
+
+--Change SoldAsVacant Value to Yes and No where there are Y and N
+
+
+select soldasvacant,
+	CASE when soldasvacant = 'Y' THEN 'Yes'
+	when soldasvacant = 'N' THEN 'No'
+	ELSE soldasvacant
+	END
+from P_Project1.dbo.Ndata
+
+
+UPDATE P_Project1.dbo.Ndata
+SET SoldAsVacant = CASE when soldasvacant = 'Y' THEN 'Yes'
+	when soldasvacant = 'N' THEN 'No'
+	ELSE soldasvacant
+	END
+
+
+
+	--Delete some of the unused uneddited coloumns
+
+	ALTER TABLE P_Project1.dbo.Ndata
+	DROP COLUMN OwnerAddress, PropertyAddress
+
+	select * from P_Project1.dbo.Ndata

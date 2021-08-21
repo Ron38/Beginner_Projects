@@ -1,2 +1,2 @@
 # RonsProjects
-A Data Cleaning Project in which I showcase how I would use SQL to clean raw data in order to make it more readable and useable for analyzing. 
+This is my repository in which I will showcase my skills in analytics and business development. 

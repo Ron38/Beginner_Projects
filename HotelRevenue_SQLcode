@@ -1,0 +1,29 @@
+--Answering the question, has total revenue increased over the past 3 years?
+--Then breaking revenue Down by hotel type
+
+
+--Starting with putting the tables together
+
+
+WITH hotel_data as( 
+select * from dbo.['2018$']
+union
+select * from dbo.['2019$']
+union
+select * from dbo.['2020$'])
+
+--Creating a Column that shows total Revenue Per Year per hotel type
+
+
+select 
+arrival_date_year,
+hotel,
+round(SUM((stays_in_weekend_nights + stays_in_week_nights) * adr),2) as Revenue_Per_Year from hotel_data 
+group by arrival_date_year,hotel;
+
+
+--Incorporating Hotel Market Segment Discount and Meal Cost by joing the appropriate tables
+
+select * from hotel_data
+join dbo.market_segment$ on hotel_data.market_segment = market_segment$.market_segment
+join dbo.meal_cost$ on hotel_data.meal = meal_cost$.meal
